@@ -31,7 +31,7 @@
     color: white;
     text-align: center;
     font-family: Arial, sans-serif;
-    pointer-events: none; /* Cho phép tương tác với camera */
+    pointer-events: none;
   }
 
   /* Logo góc trên */
@@ -69,8 +69,8 @@
 
   /* Khung đặt thẻ */
   .frame {
-    width: 300px; /* Điều chỉnh kích thước phù hợp cho thẻ ATM, căn cước */
-    height: 190px; /* Đảm bảo tỉ lệ hợp lý (16:10 cho thẻ ATM) */
+    width: 300px;
+    height: 190px;
     border: 3px dashed #fff;
     border-radius: 8px;
     box-shadow: 0 0 15px rgba(255, 255, 255, 0.5);
@@ -100,7 +100,7 @@
   <div class="instructions">Vui lòng đặt thẻ căn cước hoặc ATM vào khung để quét</div>
 </div>
 
-<!-- Canvas ẩn để chuyển đổi ảnh sang Base64 -->
+<!-- Canvas ẩn để xử lý ảnh -->
 <canvas id="canvas" style="display: none;"></canvas>
 
 <script>
@@ -126,72 +126,13 @@
   // Gọi hàm cập nhật thời gian mỗi phút
   setInterval(updateTime, 60000);
   updateTime(); // Gọi ngay lần đầu để hiển thị thời gian hiện tại
+</script>
 
-  // Hàm kiểm tra vị trí thẻ trong khung
-  function checkCardPosition() {
-    const video = document.getElementById('camera');
-    const canvas = document.getElementById('canvas');
-    const frame = document.getElementById('frame');
-    
-    // Đặt kích thước canvas theo video
-    canvas.width = video.videoWidth;
-    canvas.height = video.videoHeight;
-    const context = canvas.getContext('2d');
-
-    // Vẽ khung ảnh từ video lên canvas
-    context.drawImage(video, 0, 0, canvas.width, canvas.height);
-
-    // Lấy dữ liệu hình ảnh bên trong khung
-    const insideImageData = context.getImageData((canvas.width - 300) / 2, (canvas.height - 190) / 2, 300, 190).data;
-
-    // Lấy dữ liệu hình ảnh bên ngoài khung (ví dụ một dải bên trái khung)
-    const outsideImageData = context.getImageData((canvas.width - 300) / 2 - 10, (canvas.height - 190) / 2, 10, 190).data;
-
-    // Tính trung bình màu cho bên trong và bên ngoài
-    let insideRed = 0, insideGreen = 0, insideBlue = 0;
-    let outsideRed = 0, outsideGreen = 0, outsideBlue = 0;
-
-    for (let i = 0; i < insideImageData.length; i += 4) {
-      insideRed += insideImageData[i];
-      insideGreen += insideImageData[i + 1];
-      insideBlue += insideImageData[i + 2];
-    }
-    for (let i = 0; i < outsideImageData.length; i += 4) {
-      outsideRed += outsideImageData[i];
-      outsideGreen += outsideImageData[i + 1];
-      outsideBlue += outsideImageData[i + 2];
-    }
-
-    const insidePixelCount = insideImageData.length / 4;
-    const outsidePixelCount = outsideImageData.length / 4;
-
-    const avgInsideRed = insideRed / insidePixelCount;
-    const avgInsideGreen = insideGreen / insidePixelCount;
-    const avgInsideBlue = insideBlue / insidePixelCount;
-
-    const avgOutsideRed = outsideRed / outsidePixelCount;
-    const avgOutsideGreen = outsideGreen / outsidePixelCount;
-    const avgOutsideBlue = outsideBlue / outsidePixelCount;
-
-    // Kiểm tra sự khác biệt màu sắc giữa trong và ngoài khung
-    const colorThreshold = 30; // Ngưỡng độ lệch màu cho phép (tuỳ chỉnh)
-
-    if (
-      Math.abs(avgInsideRed - avgOutsideRed) > colorThreshold ||
-      Math.abs(avgInsideGreen - avgOutsideGreen) > colorThreshold ||
-      Math.abs(avgInsideBlue - avgOutsideBlue) > colorThreshold
-    ) {
-      frame.style.borderColor = "limegreen"; // Màu xanh lá nếu thẻ ở đúng vị trí
-    } else {
-      frame.style.borderColor = "red"; // Màu đỏ nếu thẻ chưa đúng vị trí
-    }
-  }
-
-  // Kiểm tra vị trí thẻ mỗi 500ms
-  //  setInterval(checkCardPosition, 500);
+<!-- Tải thư viện OpenCV -->
 <script async src="https://docs.opencv.org/4.x/opencv.js" onload="onOpenCvReady()"></script>
 
 <script>
+  // Khởi động OpenCV
   function onOpenCvReady() {
     console.log("OpenCV.js đã sẵn sàng");
   }
@@ -201,6 +142,10 @@
     const video = document.getElementById('camera');
     const canvas = document.getElementById('canvas');
     const context = canvas.getContext('2d');
+    
+    // Đặt kích thước canvas theo video
+    canvas.width = video.videoWidth;
+    canvas.height = video.videoHeight;
     context.drawImage(video, 0, 0, canvas.width, canvas.height);
 
     const src = cv.imread(canvas); // Chuyển đổi canvas thành ảnh OpenCV
@@ -242,8 +187,6 @@
 
   // Kiểm tra vị trí thẻ mỗi 500ms
   setInterval(checkCardPositionWithOpenCV, 500);
-</script>
-
 </script>
 
 </body>
