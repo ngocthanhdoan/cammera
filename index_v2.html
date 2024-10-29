@@ -188,7 +188,61 @@
   }
 
   // Kiểm tra vị trí thẻ mỗi 500ms
-  setInterval(checkCardPosition, 500);
+  //  setInterval(checkCardPosition, 500);
+<script async src="https://docs.opencv.org/4.x/opencv.js" onload="onOpenCvReady()"></script>
+
+<script>
+  function onOpenCvReady() {
+    console.log("OpenCV.js đã sẵn sàng");
+  }
+
+  function checkCardPositionWithOpenCV() {
+    // Lấy ảnh từ video và chuyển đổi sang định dạng OpenCV
+    const video = document.getElementById('camera');
+    const canvas = document.getElementById('canvas');
+    const context = canvas.getContext('2d');
+    context.drawImage(video, 0, 0, canvas.width, canvas.height);
+
+    const src = cv.imread(canvas); // Chuyển đổi canvas thành ảnh OpenCV
+    const gray = new cv.Mat();
+    cv.cvtColor(src, gray, cv.COLOR_RGBA2GRAY, 0); // Chuyển sang grayscale
+
+    const edges = new cv.Mat();
+    cv.Canny(gray, edges, 50, 100); // Phát hiện cạnh Canny
+
+    // Tìm kiếm hình chữ nhật trong khung
+    const contours = new cv.MatVector();
+    const hierarchy = new cv.Mat();
+    cv.findContours(edges, contours, hierarchy, cv.RETR_CCOMP, cv.CHAIN_APPROX_SIMPLE);
+
+    let isCardInFrame = false;
+
+    for (let i = 0; i < contours.size(); i++) {
+      const contour = contours.get(i);
+      const rect = cv.boundingRect(contour);
+
+      // Kiểm tra kích thước của hình chữ nhật để xem nó có thể là thẻ căn cước không
+      if (rect.width > 250 && rect.height > 150 && rect.width < 350 && rect.height < 250) {
+        isCardInFrame = true;
+        break;
+      }
+    }
+
+    // Đổi màu khung nếu phát hiện thẻ
+    const frame = document.getElementById('frame');
+    frame.style.borderColor = isCardInFrame ? "limegreen" : "red";
+
+    // Giải phóng bộ nhớ
+    src.delete();
+    gray.delete();
+    edges.delete();
+    contours.delete();
+    hierarchy.delete();
+  }
+
+  // Kiểm tra vị trí thẻ mỗi 500ms
+  setInterval(checkCardPositionWithOpenCV, 500);
+</script>
 
 </script>
 
