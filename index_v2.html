@@ -127,7 +127,7 @@
   setInterval(updateTime, 60000);
   updateTime(); // Gọi ngay lần đầu để hiển thị thời gian hiện tại
 
-  // Kiểm tra vị trí thẻ trong khung
+  // Hàm kiểm tra vị trí thẻ trong khung
   function checkCardPosition() {
     const video = document.getElementById('camera');
     const canvas = document.getElementById('canvas');
@@ -139,27 +139,51 @@
     const context = canvas.getContext('2d');
 
     // Vẽ khung ảnh từ video lên canvas
-    context.drawImage(video, (canvas.width - 300) / 2, (canvas.height - 190) / 2, 300, 190, 0, 0, 300, 190);
+    context.drawImage(video, 0, 0, canvas.width, canvas.height);
 
-    // Kiểm tra pixel giữa để phát hiện màu sắc (ví dụ, tìm xem có màu trung bình khác nền không)
-    const imageData = context.getImageData(0, 0, 300, 190).data;
-    let redSum = 0, greenSum = 0, blueSum = 0;
+    // Lấy dữ liệu hình ảnh bên trong khung
+    const insideImageData = context.getImageData((canvas.width - 300) / 2, (canvas.height - 190) / 2, 300, 190).data;
 
-    for (let i = 0; i < imageData.length; i += 4) {
-      redSum += imageData[i];
-      greenSum += imageData[i + 1];
-      blueSum += imageData[i + 2];
+    // Lấy dữ liệu hình ảnh bên ngoài khung (ví dụ một dải bên trái khung)
+    const outsideImageData = context.getImageData((canvas.width - 300) / 2 - 10, (canvas.height - 190) / 2, 10, 190).data;
+
+    // Tính trung bình màu cho bên trong và bên ngoài
+    let insideRed = 0, insideGreen = 0, insideBlue = 0;
+    let outsideRed = 0, outsideGreen = 0, outsideBlue = 0;
+
+    for (let i = 0; i < insideImageData.length; i += 4) {
+      insideRed += insideImageData[i];
+      insideGreen += insideImageData[i + 1];
+      insideBlue += insideImageData[i + 2];
+    }
+    for (let i = 0; i < outsideImageData.length; i += 4) {
+      outsideRed += outsideImageData[i];
+      outsideGreen += outsideImageData[i + 1];
+      outsideBlue += outsideImageData[i + 2];
     }
 
-    const avgRed = redSum / (imageData.length / 4);
-    const avgGreen = greenSum / (imageData.length / 4);
-    const avgBlue = blueSum / (imageData.length / 4);
+    const insidePixelCount = insideImageData.length / 4;
+    const outsidePixelCount = outsideImageData.length / 4;
 
-    // Điều kiện nhận diện đơn giản (tuỳ chỉnh theo màu sắc của thẻ)
-    if (avgGreen > avgRed && avgGreen > avgBlue) {
-      frame.style.borderColor = "limegreen"; // Màu xanh lá
+    const avgInsideRed = insideRed / insidePixelCount;
+    const avgInsideGreen = insideGreen / insidePixelCount;
+    const avgInsideBlue = insideBlue / insidePixelCount;
+
+    const avgOutsideRed = outsideRed / outsidePixelCount;
+    const avgOutsideGreen = outsideGreen / outsidePixelCount;
+    const avgOutsideBlue = outsideBlue / outsidePixelCount;
+
+    // Kiểm tra sự khác biệt màu sắc giữa trong và ngoài khung
+    const colorThreshold = 30; // Ngưỡng độ lệch màu cho phép (tuỳ chỉnh)
+
+    if (
+      Math.abs(avgInsideRed - avgOutsideRed) > colorThreshold ||
+      Math.abs(avgInsideGreen - avgOutsideGreen) > colorThreshold ||
+      Math.abs(avgInsideBlue - avgOutsideBlue) > colorThreshold
+    ) {
+      frame.style.borderColor = "limegreen"; // Màu xanh lá nếu thẻ ở đúng vị trí
     } else {
-      frame.style.borderColor = "red"; // Màu đỏ
+      frame.style.borderColor = "red"; // Màu đỏ nếu thẻ chưa đúng vị trí
     }
   }
 
