@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Khung Quét Căn Cước</title>
+<style>
+  /* Video toàn màn hình */
+  #camera {
+    width: 100vw;
+    height: 100vh;
+    object-fit: cover;
+    position: absolute;
+    top: 0;
+    left: 0;
+  }
+
+  /* Khung phủ lên video */
+  .overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+  }
+
+  .frame {
+    width: 300px; /* Điều chỉnh kích thước theo nhu cầu */
+    height: 200px;
+    border: 3px solid #fff;
+    border-radius: 8px;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
+  }
+</style>
+</head>
+<body>
+
+<video id="camera" autoplay playsinline></video>
+
+<div class="overlay">
+  <div class="frame"></div>
+</div>
+
+<script>
+  // Truy cập camera
+  navigator.mediaDevices.getUserMedia({ video: { facingMode: "environment" } })
+    .then(stream => {
+      const camera = document.getElementById('camera');
+      camera.srcObject = stream;
+    })
+    .catch(err => {
+      console.error("Lỗi khi truy cập camera: ", err);
+    });
+</script>
+
+</body>
+</html>
