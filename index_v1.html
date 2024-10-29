@@ -1,110 +1,131 @@
 <!DOCTYPE html>
 <html lang="vi">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Quét Mã QR hoặc OCR</title>
-  <style>
-    /* Toàn màn hình video */
-    #video {
-      width: 100vw;
-      height: 100vh;
-      object-fit: cover;
-      position: absolute;
-      top: 0;
-      left: 0;
-    }
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Quét Căn Cước và Thẻ ATM</title>
+<style>
+  /* Video toàn màn hình */
+  #camera {
+    width: 100vw;
+    height: 100vh;
+    object-fit: cover;
+    position: absolute;
+    top: 0;
+    left: 0;
+    z-index: 1;
+  }
 
-    /* Khung phủ lên video */
-    .overlay {
-      position: absolute;
-      top: 0;
-      left: 0;
-      width: 100vw;
-      height: 100vh;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      pointer-events: none; /* Không ảnh hưởng đến video */
-    }
+  /* Overlay cho toàn màn hình */
+  .overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    z-index: 2;
+    color: white;
+    text-align: center;
+    font-family: Arial, sans-serif;
+    pointer-events: none; /* Cho phép tương tác với camera */
+  }
 
-    /* Khung quét trung tâm */
-    .frame {
-      width: 300px; /* Kích thước khung */
-      height: 300px;
-      border: 3px solid #00ff00; /* Đường viền màu xanh lá */
-      border-radius: 8px;
-      box-shadow: 0 0 10px rgba(0, 255, 0, 0.5);
-      position: relative;
-    }
+  /* Logo góc trên */
+  .logo {
+    position: absolute;
+    top: 20px;
+    left: 20px;
+    font-size: 24px;
+    font-weight: bold;
+    background-color: rgba(0, 0, 0, 0.7);
+    padding: 10px;
+    border-radius: 5px;
+  }
 
-    /* Hướng dẫn */
-    .instructions {
-      position: absolute;
-      top: 80%;
-      color: white;
-      background-color: rgba(0, 0, 0, 0.5);
-      padding: 10px 15px;
-      border-radius: 5px;
-      font-family: Arial, sans-serif;
-      font-size: 18px;
-      text-align: center;
-      max-width: 80%;
-    }
-  </style>
+  /* Thông tin thời gian */
+  .time {
+    position: absolute;
+    top: 20px;
+    right: 20px;
+    font-size: 18px;
+    background-color: rgba(0, 0, 0, 0.7);
+    padding: 10px;
+    border-radius: 5px;
+  }
+
+  /* Hướng dẫn đặt căn cước */
+  .instructions {
+    font-size: 18px;
+    background-color: rgba(0, 0, 0, 0.5);
+    padding: 10px 15px;
+    border-radius: 5px;
+    max-width: 80%;
+    margin-top: 20px;
+  }
+
+  /* Khung đặt thẻ */
+  .frame {
+    width: 300px; /* Điều chỉnh kích thước phù hợp cho thẻ ATM, căn cước */
+    height: 190px; /* Đảm bảo tỉ lệ hợp lý (16:10 cho thẻ ATM) */
+    border: 3px dashed #fff;
+    border-radius: 8px;
+    box-shadow: 0 0 15px rgba(255, 255, 255, 0.5);
+    position: relative;
+    margin-bottom: 20px;
+  }
+</style>
 </head>
 <body>
 
-  <video id="video" autoplay playsinline></video>
-  <div class="overlay">
-    <div class="frame"></div>
-  </div>
-  <div class="instructions">Vui lòng đặt mã QR hoặc CCCD vào khung để quét</div>
+<!-- Video hiển thị camera -->
+<video id="camera" autoplay playsinline></video>
 
-  <script src="https://cdn.jsdelivr.net/npm/jsqr@1.3.1/dist/jsQR.js"></script>
-  <script>
-    const video = document.getElementById('video');
-    const frameWidth = 300;
-    const frameHeight = 300;
+<!-- Overlay hiển thị khung và thông tin -->
+<div class="overlay">
+  <!-- Logo -->
+  <div class="logo">MyLogo</div>
 
-    // Truy cập camera sau
-    navigator.mediaDevices.getUserMedia({ video: { facingMode: "environment" } })
-      .then(stream => {
-        video.srcObject = stream;
-        video.play();
-        requestAnimationFrame(scanQR);
-      })
-      .catch(err => {
-        console.error("Lỗi khi truy cập camera:", err);
-        document.querySelector('.instructions').innerText = "Không thể truy cập camera";
-      });
+  <!-- Thông tin thời gian -->
+  <div class="time" id="time">00:00</div>
 
-    function scanQR() {
-      // Tạo canvas để xử lý hình ảnh từ video
-      const canvas = document.createElement('canvas');
-      const context = canvas.getContext('2d');
-      canvas.width = frameWidth;
-      canvas.height = frameHeight;
+  <!-- Khung chụp căn cước/thẻ ATM -->
+  <div class="frame"></div>
 
-      // Cắt một phần trung tâm của video theo kích thước khung quét
-      context.drawImage(video, 
-        (video.videoWidth - frameWidth) / 2, 
-        (video.videoHeight - frameHeight) / 2, 
-        frameWidth, frameHeight, 
-        0, 0, frameWidth, frameHeight
-      );
+  <!-- Hướng dẫn cho người dùng -->
+  <div class="instructions">Vui lòng đặt thẻ căn cước hoặc ATM vào khung để quét</div>
+</div>
 
-      // Lấy dữ liệu từ canvas và sử dụng jsQR để quét mã QR
-      const imageData = context.getImageData(0, 0, frameWidth, frameHeight);
-      const qrCode = jsQR(imageData.data, frameWidth, frameHeight);
+<!-- Canvas ẩn để chuyển đổi ảnh sang Base64 -->
+<canvas id="canvas" style="display: none;"></canvas>
 
-      if (qrCode) {
-        document.querySelector('.instructions').innerText = `Mã QR: ${qrCode.data}`; // Hiển thị dữ liệu mã QR
-      } else {
-        document.querySelector('.instructions').innerText = "Đang quét mã QR hoặc CCCD...";
-        requestAnimationFrame(scanQR); // Tiếp tục quét nếu chưa phát hiện mã
-      }
-    }
-  </script>
+<script>
+  // Truy cập camera
+  navigator.mediaDevices.getUserMedia({ video: { facingMode: "environment" } })
+    .then(stream => {
+      const camera = document.getElementById('camera');
+      camera.srcObject = stream;
+    })
+    .catch(err => {
+      console.error("Lỗi khi truy cập camera: ", err);
+    });
+
+  // Cập nhật thời gian thực
+  function updateTime() {
+    const timeElement = document.getElementById('time');
+    const now = new Date();
+    const hours = String(now.getHours()).padStart(2, '0');
+    const minutes = String(now.getMinutes()).padStart(2, '0');
+    timeElement.textContent = `${hours}:${minutes}`;
+  }
+
+  // Gọi hàm cập nhật thời gian mỗi phút
+  setInterval(updateTime, 60000);
+  updateTime(); // Gọi ngay lần đầu để hiển thị thời gian hiện tại
+</script>
+
 </body>
 </html>
